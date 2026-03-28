@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Doctor — Dr. Aria · MediBuddy</title>
+  <link rel="stylesheet" href="../styles/main.css"/>
+  <link rel="stylesheet" href="../styles/animations.css"/>
+  <style>
+    .vc-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;padding:24px 0 32px;}
+
+    /* ── Video container ── */
+    .video-container{
+      position:relative;background:#020817;
+      border-radius:var(--radius-lg);overflow:hidden;
+      aspect-ratio:16/9;
+      border:1px solid rgba(99,102,241,0.3);
+      box-shadow:0 0 60px rgba(99,102,241,0.18),0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    /* ── Aria canvas fills the whole video area ── */
+    #ariaAvatarContainer{
+      position:absolute;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(160deg,#020817 0%,#060d1e 40%,#0a1228 100%);
+    }
+    #ariaAvatarContainer canvas{
+      width:100%!important;height:100%!important;display:block;
+    }
+
+    /* ── Idle state (before call) ── */
+    .idle-overlay{
+      position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;z-index:5;
+      background:linear-gradient(160deg,#020817 0%,#060d1e 40%,#0a1228 100%);
+    }
+    .idle-avatar{
+      width:160px;height:160px;border-radius:50%;
+      background:linear-gradient(135deg,#1a2040,#0c1628);
+      border:3px solid rgba(99,102,241,0.4);
+      display:flex;align-items:center;justify-content:center;
+      font-size:64px;position:relative;margin-bottom:16px;
+    }
+    .idle-grid{
+      position:absolute;inset:0;
+      background-image:linear-gradient(rgba(99,102,241,0.025) 1px,transparent 1px),
+                       linear-gradient(90deg,rgba(99,102,241,0.025) 1px,transparent 1px);
+      background-size:44px 44px;
+    }
+
+    /* ── User PiP ── */
+    .user-pip{
+      position:absolute;bottom:76px;right:14px;
+      width:130px;height:90px;
+      background:#0a0a1a;
+      border-radius:var(--radius-sm);
+      border:2px solid var(--border);
+      overflow:hidden;z-index:20;
+      display:flex;align-items:center;justify-content:center;
+      transition:var(--transition);
+    }
+    .user-pip:hover{border-color:var(--accent-indigo);}
+    .user-pip video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+
+    /* ── Overlays ── */
+    .call-status-bar{
+      position:absolute;top:14px;left:50%;transform:translateX(-50%);
+      background:rgba(2,8,23,0.8);backdrop-filter:blur(16px);
+      border:1px solid var(--border);border-radius:20px;
+      padding:5px 16px;display:flex;align-items:center;gap:8px;
+      z-index:15;font-size:12px;white-space:nowrap;
+    }
+    .doctor-name-tag{
+      position:absolute;bottom:76px;left:14px;
+      background:rgba(2,8,23,0.8);backdrop-filter:blur(12px);
+      border:1px solid var(--border);border-radius:var(--radius-xs);
+      padding:6px 12px;z-index:15;
+    }
+    .waveform-container{
+      position:absolute;bottom:76px;left:50%;transform:translateX(-50%);
+      z-index:15;display:none;
+    }
+    .scan-overlay{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:4;}
+    .particles{position:absolute;inset:0;pointer-events:none;z-index:3;}
+
+    /* ── Controls ── */
+    .call-controls{
+      display:flex;gap:10px;justify-content:center;align-items:center;
+      padding:14px 20px;background:var(--bg-card);border-top:1px solid var(--border);
+    }
+    .control-btn{
+      width:48px;height:48px;border-radius:50%;
+      border:1px solid var(--border);background:var(--bg-secondary);
+      color:var(--text-primary);font-size:17px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:var(--transition);font-family:var(--font-sans);
+    }
+    .control-btn:hover{border-color:var(--accent-indigo);background:rgba(99,102,241,0.12);transform:scale(1.06);}
+    .control-btn.muted{background:rgba(239,68,68,0.15);border-color:var(--accent-red);}
+    .control-btn.end-call{
+      background:var(--gradient-danger);border-color:transparent;
+      width:56px;height:56px;font-size:20px;
+      box-shadow:0 4px 20px rgba(239,68,68,0.35);
+    }
+    .control-btn.end-call:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(239,68,68,0.55);}
+
+    /* ── Side panel ── */
+    .side-panel{display:flex;flex-direction:column;gap:14px;}
+    .input-field{
+      background:var(--bg-input);border:1px solid var(--border);
+      border-radius:var(--radius-sm);padding:9px 13px;
+      color:var(--text-primary);font-size:13px;font-family:var(--font-sans);
+      outline:none;transition:var(--transition);width:100%;
+    }
+    .input-field:focus{border-color:var(--accent-indigo);box-shadow:0 0 0 3px rgba(99,102,241,0.1);}
+    .input-field::placeholder{color:var(--text-muted);}
+
+    @media(max-width:900px){.vc-layout{grid-template-columns:1fr;}.side-panel{display:none;}}
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div>
+
+<nav class="navbar">
+  <a href="../index.html" class="nav-logo">
+    <img src="../assets/logo.png" alt="MediBuddy logo" style="width:32px;height:32px;object-fit:contain;"/>
+    <span class="nav-logo-text">MediBuddy</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="chat.html">AI Chatbot</a></li>
+    <li><a href="patient-dashboard.html">Patient</a></li>
+    <li><a href="doctor-dashboard.html">Doctor</a></li>
+    <li><a href="video-call.html" class="active">AI Doctor</a></li>
+  </ul>
+  <div class="nav-actions">
+    <div class="nav-pill"><span class="nav-pill-dot"></span>Dr. Aria Online</div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container">
+    <div class="vc-layout">
+
+      <!-- ══ Left: Video ══ -->
+      <div>
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <h1 style="font-size:20px;font-weight:800;margin-bottom:2px;">AI Doctor Consultation</h1>
+            <p style="font-size:12px;color:var(--text-muted);">Real-time voice interaction with Dr. Aria · AI Medical Assistant</p>
+          </div>
+          <div id="callTimer" style="font-size:20px;font-weight:700;font-family:var(--font-mono);color:var(--accent-indigo);background:var(--bg-card);padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);">00:00</div>
+        </div>
+
+        <!-- Video box -->
+        <div class="video-container" id="videoBox">
+
+          <!-- Aria canvas (filled by JS after call starts) -->
+          <div id="ariaAvatarContainer">
+            <!-- Idle overlay shown before call -->
+            <div class="idle-overlay" id="idleOverlay">
+              <div class="idle-grid"></div>
+              <div class="particles" id="videoParticles"></div>
+              <div class="scan-overlay"><div class="scan-line"></div></div>
+              <div class="idle-avatar">
+                👩‍⚕️
+                <div class="call-ring" style="inset:-10px;"></div>
+                <div class="call-ring" style="inset:-10px;animation-delay:0.7s;"></div>
+              </div>
+              <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Dr. Aria</div>
+              <div style="font-size:12px;color:var(--accent-indigo);">AI Medical Assistant · Ready</div>
+            </div>
+          </div>
+
+          <!-- Status bar (always visible during call) -->
+          <div class="call-status-bar" id="callStatusBar" style="display:none;">
+            <span class="status-dot online"></span>
+            <span id="callStatusText">Connecting...</span>
+          </div>
+
+          <!-- Doctor name tag (during call) -->
+          <div class="doctor-name-tag" id="doctorNameTag" style="display:none;">
+            <div style="font-weight:700;font-size:12px;">Dr. Aria</div>
+            <div style="font-size:10px;color:var(--accent-indigo);">AI Medical Assistant</div>
+          </div>
+
+          <!-- Waveform (shown when speaking) -->
+          <div class="waveform-container" id="waveformContainer">
+            <div class="waveform">
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+            </div>
+          </div>
+
+          <!-- User PiP (webcam) -->
+          <div class="user-pip" id="userVideoFeed" title="Your camera">
+            <span style="font-size:28px;">👤</span>
+          </div>
+
+          <!-- Call controls (shown after call starts) -->
+          <div class="call-controls" id="callControls" style="display:none;">
+            <button class="control-btn" id="muteBtn" title="Mute/Unmute" aria-label="Mute">🎤</button>
+            <button class="control-btn" id="videoToggleBtn" title="Toggle camera" aria-label="Camera">📹</button>
+            <button class="control-btn" title="Share screen" onclick="Toast.show('Screen sharing not available in demo','info')">🖥️</button>
+            <button class="control-btn" title="Settings" onclick="Toast.show('Settings coming soon','info')">⚙️</button>
+            <button class="control-btn end-call" id="endCallBtn" title="End call" aria-label="End call">📵</button>
+          </div>
+        </div>
+
+        <!-- Pre-call card -->
+        <div id="startCallCard" style="margin-top:14px;">
+          <div class="card" style="padding:26px;text-align:center;border-color:rgba(99,102,241,0.25);">
+            <div style="font-size:44px;margin-bottom:10px;position:relative;display:inline-block;">
+              👩‍⚕️
+              <div class="call-ring" style="inset:-8px;"></div>
+              <div class="call-ring" style="inset:-8px;animation-delay:0.6s;"></div>
+            </div>
+            <div style="font-size:17px;font-weight:800;margin-bottom:7px;">Connect with Dr. Aria</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.7;">
+              Dr. Aria will appear as a fully animated AI doctor. Your webcam will turn on so she can see you. Voice interaction is enabled — just speak naturally.
+            </div>
+            <div class="safety-note" style="margin-bottom:16px;text-align:left;max-width:480px;margin-left:auto;margin-right:auto;">
+              <span class="safety-note-icon">⚠️</span>
+              <div class="safety-note-text">
+                <strong>AI Safety Notice:</strong> Dr. Aria is an AI assistant. Responses are informational only — not a substitute for professional medical care. AI is not 100% accurate. For emergencies call 911 / 999 / 112 immediately.
+              </div>
+            </div>
+            <button onclick="startConsultation()" class="btn btn-primary btn-xl">
+              🎥 Start Video Consultation
+            </button>
+          </div>
+        </div>
+
+        <!-- Text input during call -->
+        <div id="callTextArea" style="display:none;margin-top:12px;">
+          <div class="card" style="padding:12px;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px;">💬 Type a message to Dr. Aria</div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="callTextInput" class="input-field" placeholder="Type your question..." aria-label="Message to Dr. Aria"/>
+              <button class="btn btn-primary btn-sm" onclick="sendCallMessage()" style="flex-shrink:0;">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Right: Side panel ══ -->
+      <div class="side-panel">
+
+        <!-- Doctor info -->
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <div style="width:52px;height:52px;border-radius:50%;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid rgba(99,102,241,0.4);flex-shrink:0;">👩‍⚕️</div>
+            <div>
+              <div style="font-weight:700;font-size:15px;">Dr. Aria</div>
+              <div style="font-size:11px;color:var(--text-muted);">AI Medical Assistant</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:3px;">
+                <span class="status-dot online"></span>
+                <span style="font-size:11px;color:var(--accent-green);">Available 24/7</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="background:var(--bg-secondary);padding:10px;border-radius:var(--radius-sm);text-align:center;">
+              <div style="font-size:13px;font-weight:700;color:var(--accent-indigo);">AI-Powered</div>
+              <div style="font-size:10px;color:var(--text-muted);">Real medical data</div>
+            </div>
+            <div style="background:var(--bg-secondary);padding:10px;border-radius:var(--radius-sm);text-align:center;">
+              <div style="font-size:13px;font-weight:700;color:var(--accent-green);">24/7</div>
+              <div style="font-size:10px;color:var(--text-muted);">Always available</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Capabilities -->
+        <div class="card">
+          <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Dr. Aria Can Help With</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+            <div style="color:var(--accent-green);">✅ Symptom assessment & triage</div>
+            <div style="color:var(--accent-green);">✅ Medical history review</div>
+            <div style="color:var(--accent-green);">✅ Urgency level prediction</div>
+            <div style="color:var(--accent-green);">✅ Specialist recommendations</div>
+            <div style="color:var(--accent-green);">✅ General OTC medicine guidance</div>
+            <div style="color:var(--accent-green);">✅ Mental health support</div>
+            <div style="color:var(--accent-green);">✅ Lifestyle & wellness advice</div>
+            <div style="color:var(--text-muted);">❌ Prescriptions (requires human doctor)</div>
+            <div style="color:var(--text-muted);">❌ Emergency treatment</div>
+          </div>
+        </div>
+
+        <!-- Live transcript -->
+        <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:200px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0;">
+            <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Live Transcript</div>
+            <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;" onclick="clearTranscript()">Clear</button>
+          </div>
+          <div id="callTranscript" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:0;">
+            <div data-placeholder style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">Start the call to see transcript</div>
+          </div>
+        </div>
+
+        <!-- Safety note -->
+        <div class="safety-note">
+          <span class="safety-note-icon">⚠️</span>
+          <div class="safety-note-text">
+            <strong>Disclaimer:</strong> Dr. Aria is an AI, not a licensed physician. Always consult a real doctor for medical decisions. AI is not 100% accurate.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/ai-doctor.js"></script>
+<script>
+// ── Page-level helpers ────────────────────────────────────────────────────────
+
+function clearTranscript() {
+  const t = document.getElementById('callTranscript');
+  if (t) t.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:12px;">Cleared</div>';
+}
+
+function sendCallMessage() {
+  const input = document.getElementById('callTextInput');
+  if (!input || !input.value.trim()) return;
+  const msg = input.value.trim();
+  input.value = '';
+  if (aiDoctor) {
+    aiDoctor.addCallMessage(msg, 'user');
+    setTimeout(() => aiDoctor.speak(aiDoctor.generateResponse(msg)), 500);
+  }
+}
+
+async function startConsultation() {
+  if (!aiDoctor) return;
+
+  // Hide pre-call card, show controls + text area
+  document.getElementById('startCallCard').style.display = 'none';
+  document.getElementById('callControls').style.display  = 'flex';
+  document.getElementById('callTextArea').style.display  = 'block';
+  document.getElementById('callStatusBar').style.display = 'flex';
+  document.getElementById('doctorNameTag').style.display = 'block';
+  document.getElementById('callStatusText').textContent  = 'Connecting...';
+
+  // Hide idle overlay — canvas will take over
+  const idle = document.getElementById('idleOverlay');
+  if (idle) idle.style.display = 'none';
+
+  await aiDoctor.startCall();
+
+  setTimeout(() => {
+    const st = document.getElementById('callStatusText');
+    if (st && st.textContent === 'Connecting...') st.textContent = 'Connected';
+  }, 1600);
+}
+
+// ── Patch updateAvatarState for waveform + status text ────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initParticles('videoParticles');
+
+  const origUpdate = AIDoctorCall.prototype.updateAvatarState;
+  AIDoctorCall.prototype.updateAvatarState = function(state) {
+    if (origUpdate) origUpdate.call(this, state);
+    const wf  = document.getElementById('waveformContainer');
+    const st  = document.getElementById('callStatusText');
+    if (wf) wf.style.display = state === 'speaking' ? 'flex' : 'none';
+    if (st) {
+      if      (state === 'speaking')  st.textContent = 'Dr. Aria is speaking...';
+      else if (state === 'listening') st.textContent = 'Listening...';
+      else if (state === 'idle')      st.textContent = 'Call ended';
+    }
+  };
+});
+
+document.getElementById('callTextInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendCallMessage();
+});
+</script>
+</body>
+</html>

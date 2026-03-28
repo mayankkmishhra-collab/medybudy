@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Doctor Dashboard — MediBuddy</title>
+  <link rel="stylesheet" href="../styles/main.css"/>
+  <link rel="stylesheet" href="../styles/animations.css"/>
+  <style>
+    html,body{overflow:hidden;height:100%;}
+    .layout-sidebar main{overflow-y:scroll!important;}
+    .layout-sidebar main::-webkit-scrollbar{width:4px;}
+    .layout-sidebar main::-webkit-scrollbar-track{background:transparent;}
+    .layout-sidebar main::-webkit-scrollbar-thumb{background:var(--accent-indigo);border-radius:4px;}
+    .analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px;}
+    .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
+    .ai-bar{height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;margin-top:6px;}
+    .ai-bar-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);}
+    .urgency-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .patient-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+    @media(max-width:1100px){.analytics-grid{grid-template-columns:repeat(2,1fr);}.three-col{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div><div class="mesh-bg"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div>
+
+<nav class="navbar">
+  <a href="../index.html" class="nav-logo">
+    <img src="../assets/logo.png" alt="MediBuddy logo" style="width:32px;height:32px;object-fit:contain;"/>
+    <span class="nav-logo-text">MediBuddy</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="chat.html">AI Chatbot</a></li>
+    <li><a href="patient-dashboard.html">Patient</a></li>
+    <li><a href="doctor-dashboard.html" class="active">Doctor</a></li>
+    <li><a href="video-call.html">AI Doctor</a></li>
+  </ul>
+  <div class="nav-actions">
+    <div class="nav-pill"><span class="nav-pill-dot"></span>AI Online</div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    <div style="position:relative;">
+      <button class="btn btn-ghost btn-icon" aria-label="Notifications" onclick="Toast.show('3 new AI alerts — 2 critical cases need review','warning')">🔔</button>
+      <div class="notif-badge">3</div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="layout-sidebar">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-profile">
+        <div class="sidebar-avatar" style="background:linear-gradient(135deg,#ef4444,#f97316);">👨‍⚕️</div>
+        <div style="font-weight:700;font-size:15px;">Dr. Sarah Chen</div>
+        <div style="font-size:11px;color:var(--text-muted);">Cardiologist · MediBuddy Partner</div>
+        <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="badge badge-info">MD, FACC</span>
+          <span class="badge badge-low">Online</span>
+        </div>
+        <div style="margin-top:14px;background:var(--bg-secondary);border-radius:var(--radius-sm);padding:10px;border:1px solid var(--border);">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Today's Progress</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:12px;" id="progressLabel">0 / 0 patients</span>
+            <span style="font-size:11px;color:var(--text-muted);" id="progressPct">—</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width:0%;background:var(--gradient-green);"></div></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <ul class="sidebar-nav">
+        <li><a href="#overview" class="active"><span class="nav-icon">📊</span>Overview</a></li>
+        <li><a href="#queue"><span class="nav-icon">👥</span>Patient Queue <span style="margin-left:auto;background:rgba(239,68,68,0.2);color:#ef4444;font-size:10px;padding:1px 6px;border-radius:10px;">5</span></a></li>
+        <li><a href="#schedule"><span class="nav-icon">📅</span>Schedule</a></li>
+        <li><a href="#ai-insights"><span class="nav-icon">🤖</span>AI Insights</a></li>
+        <li><a href="#analytics"><span class="nav-icon">📈</span>Analytics</a></li>
+      </ul>
+      <div class="divider"></div>
+      <div style="padding:0 4px;">
+        <a href="video-call.html" class="btn btn-primary" style="width:100%;justify-content:center;font-size:13px;">🎥 Start Video Call</a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main style="padding:24px 28px;overflow-y:auto;" id="overview">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div>
+          <h1 style="font-size:21px;font-weight:800;margin-bottom:2px;">Doctor Dashboard</h1>
+          <p style="font-size:12px;color:var(--text-muted);">AI-assisted patient management & clinical insights</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:11px;color:var(--text-muted);">
+            📅 Saturday, March 28, 2026
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="analytics-grid stagger" id="analytics">
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:6px;">👥</div>
+          <div class="stat-value" style="background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;" id="ds1">—</div>
+          <div class="stat-label">Today's Patients</div>
+          <div class="stat-change" style="color:var(--text-muted);">From queue below</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:6px;">🚨</div>
+          <div class="stat-value" style="background:var(--gradient-danger);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;" id="ds2">—</div>
+          <div class="stat-label">Critical Cases</div>
+          <div class="stat-change" style="color:var(--text-muted);">From queue below</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:6px;">✅</div>
+          <div class="stat-value" style="background:var(--gradient-green);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;" id="ds3">—</div>
+          <div class="stat-label">Completed Today</div>
+          <div class="stat-change" style="color:var(--text-muted);">Updated live</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:6px;">🤖</div>
+          <div class="stat-value" style="background:var(--gradient-purple);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;">100%</div>
+          <div class="stat-label">AI Model Accuracy</div>
+          <div class="stat-change up">↑ On test dataset</div>
+        </div>
+      </div>
+
+      <!-- Queue + Schedule -->
+      <div class="two-col" id="queue">
+        <!-- Patient Queue -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <h2 style="font-size:15px;font-weight:700;">Patient Queue</h2>
+            <div style="display:flex;gap:4px;">
+              <span class="badge badge-critical" style="font-size:10px;">2 Critical</span>
+              <span class="badge badge-high" style="font-size:10px;">2 High</span>
+            </div>
+          </div>
+          <div id="patientQueue">
+            <div class="patient-row" onclick="openPatientModal('John D.', 58, 'Chest pain, shortness of breath', 'Critical', 'Cardiologist', 'Possible cardiac event. Immediate evaluation required.')">
+              <div class="queue-badge" style="background:rgba(239,68,68,0.18);color:#ef4444;">1</div>
+              <div style="width:34px;height:34px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:12px;">John D., 58</div>
+                <div style="font-size:11px;color:var(--text-muted);" class="truncate">Chest pain, shortness of breath</div>
+                <div style="font-size:10px;margin-top:1px;">AI: <span style="color:#ef4444;font-weight:700;">Critical</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0;">
+                <span class="badge badge-critical" style="font-size:10px;">Critical</span>
+                <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();location.href='video-call.html'">Call Now</button>
+              </div>
+            </div>
+            <div class="patient-row" onclick="openPatientModal('Maria S.', 34, 'Severe allergic reaction, rash', 'Critical', 'Allergist/Immunologist', 'Anaphylaxis risk. Epinephrine may be required.')">
+              <div class="queue-badge" style="background:rgba(239,68,68,0.18);color:#ef4444;">2</div>
+              <div style="width:34px;height:34px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:12px;">Maria S., 34</div>
+                <div style="font-size:11px;color:var(--text-muted);">Severe allergic reaction, rash</div>
+                <div style="font-size:10px;margin-top:1px;">AI: <span style="color:#ef4444;font-weight:700;">Critical</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0;">
+                <span class="badge badge-critical" style="font-size:10px;">Critical</span>
+                <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();location.href='video-call.html'">Call Now</button>
+              </div>
+            </div>
+            <div class="patient-row" onclick="openPatientModal('Alex K.', 29, 'Severe headache, dizziness', 'High', 'Neurologist', 'Possible migraine or hypertensive episode.')">
+              <div class="queue-badge" style="background:rgba(249,115,22,0.18);color:#f97316;">3</div>
+              <div style="width:34px;height:34px;border-radius:50%;background:rgba(249,115,22,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:12px;">Alex K., 29</div>
+                <div style="font-size:11px;color:var(--text-muted);">Severe headache, dizziness</div>
+                <div style="font-size:10px;margin-top:1px;">AI: <span style="color:#f97316;font-weight:700;">High</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0;">
+                <span class="badge badge-high" style="font-size:10px;">High</span>
+                <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();location.href='video-call.html'">Schedule</button>
+              </div>
+            </div>
+            <div class="patient-row" onclick="openPatientModal('Emma L.', 45, 'Persistent cough, fatigue', 'Medium', 'Pulmonologist', 'Possible respiratory infection or early COPD.')">
+              <div class="queue-badge" style="background:rgba(245,158,11,0.18);color:#f59e0b;">4</div>
+              <div style="width:34px;height:34px;border-radius:50%;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:12px;">Emma L., 45</div>
+                <div style="font-size:11px;color:var(--text-muted);">Persistent cough, fatigue</div>
+                <div style="font-size:10px;margin-top:1px;">AI: <span style="color:#f59e0b;font-weight:700;">Medium</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0;">
+                <span class="badge badge-medium" style="font-size:10px;">Medium</span>
+                <button class="btn btn-ghost btn-xs">Review</button>
+              </div>
+            </div>
+            <div class="patient-row" onclick="openPatientModal('Tom R.', 22, 'Mild sore throat, runny nose', 'Low', 'ENT Specialist', 'Likely viral upper respiratory infection.')">
+              <div class="queue-badge" style="background:rgba(16,185,129,0.18);color:#10b981;">5</div>
+              <div style="width:34px;height:34px;border-radius:50%;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:12px;">Tom R., 22</div>
+                <div style="font-size:11px;color:var(--text-muted);">Mild sore throat, runny nose</div>
+                <div style="font-size:10px;margin-top:1px;">AI: <span style="color:#10b981;font-weight:700;">Low</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0;">
+                <span class="badge badge-low" style="font-size:10px;">Low</span>
+                <button class="btn btn-ghost btn-xs">Review</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule -->
+        <div id="schedule">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <h2 style="font-size:15px;font-weight:700;">Today's Schedule</h2>
+            <span class="badge badge-info" style="font-size:10px;">8 appointments</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div class="schedule-item" style="background:rgba(16,185,129,0.04);border-color:rgba(16,185,129,0.18);">
+              <div class="schedule-time" style="color:var(--accent-green);font-size:11px;">9:00 AM</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">AI Triage Review</div><div style="font-size:10px;color:var(--text-muted);">Review overnight AI assessments</div></div>
+              <span class="badge badge-low" style="font-size:10px;">Done</span>
+            </div>
+            <div class="schedule-item" style="background:rgba(239,68,68,0.04);border-color:rgba(239,68,68,0.18);">
+              <div class="schedule-time" style="color:#ef4444;font-size:11px;">10:30 AM</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">John D. — Emergency</div><div style="font-size:10px;color:var(--text-muted);">Chest pain follow-up</div></div>
+              <span class="badge badge-critical" style="font-size:10px;">Urgent</span>
+            </div>
+            <div class="schedule-item" style="background:rgba(99,102,241,0.04);border-color:rgba(99,102,241,0.18);">
+              <div class="schedule-time" style="color:var(--accent-indigo);font-size:11px;">2:00 PM</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">Alex Johnson — Video Call</div><div style="font-size:10px;color:var(--text-muted);">Cardiology consultation</div></div>
+              <span class="badge badge-info" style="font-size:10px;">Upcoming</span>
+            </div>
+            <div class="schedule-item" style="background:rgba(245,158,11,0.04);border-color:rgba(245,158,11,0.18);">
+              <div class="schedule-time" style="color:#f59e0b;font-size:11px;">3:30 PM</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">Emma L. — Follow-up</div><div style="font-size:10px;color:var(--text-muted);">Respiratory assessment</div></div>
+              <span class="badge badge-medium" style="font-size:10px;">Scheduled</span>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time" style="color:var(--text-muted);font-size:11px;">5:00 PM</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">AI Report Review</div><div style="font-size:10px;color:var(--text-muted);">End-of-day AI summary</div></div>
+              <span class="badge badge-info" style="font-size:10px;">Pending</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Insights -->
+      <div id="ai-insights" style="margin-bottom:22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <h2 style="font-size:15px;font-weight:700;">🤖 AI Insights & Patterns</h2>
+          <span class="badge badge-purple" style="font-size:10px;">AI Generated</span>
+        </div>
+        <div class="three-col">
+          <div class="ai-insight-card">
+            <div style="font-size:18px;margin-bottom:7px;">📈</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:4px;">Symptom Trend</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px;line-height:1.5;">Respiratory complaints up 23% this week. Possible seasonal pattern detected.</div>
+            <div class="ai-bar"><div class="ai-bar-fill" style="width:0%;background:var(--gradient-primary);" data-width="73"></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">73% confidence</div>
+          </div>
+          <div class="ai-insight-card">
+            <div style="font-size:18px;margin-bottom:7px;">⚠️</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:4px;">Risk Alert</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px;line-height:1.5;">2 patients show cardiac risk indicators. Priority review recommended.</div>
+            <div class="ai-bar"><div class="ai-bar-fill" style="width:0%;background:var(--gradient-danger);" data-width="88"></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">88% confidence</div>
+          </div>
+          <div class="ai-insight-card">
+            <div style="font-size:18px;margin-bottom:7px;">💡</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:4px;">Preventive Care</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px;line-height:1.5;">3 patients may benefit from preventive care based on history patterns.</div>
+            <div class="ai-bar"><div class="ai-bar-fill" style="width:0%;background:var(--gradient-green);" data-width="65"></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">65% confidence</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Safety note -->
+      <div class="safety-note">
+        <span class="safety-note-icon">⚠️</span>
+        <div class="safety-note-text">
+          <strong>AI Assistance Disclaimer:</strong> AI insights are decision-support tools only. All clinical decisions must be made by licensed medical professionals. AI accuracy is not 100%. Always apply clinical judgment and follow established medical protocols.
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Patient Detail Modal -->
+<div class="modal-overlay" id="patientModal" role="dialog" aria-modal="true" aria-labelledby="patientModalTitle">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="patientModalTitle">Patient Details</h3>
+      <button class="modal-close" onclick="closeModal('patientModal')" aria-label="Close">✕</button>
+    </div>
+    <div id="patientModalContent"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeModal('patientModal')">Close</button>
+      <a href="video-call.html" class="btn btn-primary">🎥 Start Video Call</a>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+function openPatientModal(name, age, symptoms, urgency, specialist, aiNote) {
+  const urgencyBadge = { Critical:'badge-critical', High:'badge-high', Medium:'badge-medium', Low:'badge-low' };
+  document.getElementById('patientModalTitle').textContent = name + ', Age ' + age;
+  document.getElementById('patientModalContent').innerHTML = `
+    <div class="patient-detail-grid">
+      <div class="card-flat" style="padding:12px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Symptoms</div>
+        <div style="font-size:13px;">${symptoms}</div>
+      </div>
+      <div class="card-flat" style="padding:12px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Urgency</div>
+        <span class="badge ${urgencyBadge[urgency]}">${urgency}</span>
+      </div>
+      <div class="card-flat" style="padding:12px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Recommended Specialist</div>
+        <div style="font-size:13px;font-weight:600;">${specialist}</div>
+      </div>
+      <div class="card-flat" style="padding:12px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">AI Confidence</div>
+        <div style="font-size:16px;font-weight:800;color:var(--accent-indigo);font-family:var(--font-mono);">87%</div>
+      </div>
+    </div>
+    <div class="card-flat" style="padding:12px;margin-bottom:12px;">
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">🤖 AI Clinical Note</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">${aiNote}</div>
+    </div>
+    <div class="safety-note">
+      <span class="safety-note-icon">⚠️</span>
+      <div class="safety-note-text" style="font-size:11px;"><strong>AI Pre-assessment:</strong> This is AI-generated triage. Clinical judgment required before any treatment decision. AI is not 100% accurate.</div>
+    </div>
+  `;
+  openModal('patientModal');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Count from actual queue rows
+  const queueRows = document.querySelectorAll('#patientQueue .patient-row');
+  const criticalRows = document.querySelectorAll('#patientQueue .badge-critical');
+  const total = queueRows.length;
+  const critical = criticalRows.length;
+
+  const ds1 = document.getElementById('ds1');
+  const ds2 = document.getElementById('ds2');
+  const ds3 = document.getElementById('ds3');
+  if (ds1) ds1.textContent = total;
+  if (ds2) ds2.textContent = critical;
+  if (ds3) ds3.textContent = '0';
+
+  // Progress bar — 0 completed until doctor marks them done
+  const progressLabel = document.getElementById('progressLabel');
+  const progressPct   = document.getElementById('progressPct');
+  const progressBar   = document.getElementById('progressBar');
+  if (progressLabel) progressLabel.textContent = `0 / ${total} patients`;
+  if (progressPct)   progressPct.textContent = '0%';
+  if (progressBar)   progressBar.style.width = '0%';
+
+  // Animate AI insight bars
+  setTimeout(() => {
+    document.querySelectorAll('.ai-bar-fill[data-width]').forEach(el => {
+      el.style.width = el.dataset.width + '%';
+    });
+  }, 600);
+});
+</script>
+</body>
+</html>

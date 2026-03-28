@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediBuddy — Intelligent Health Assistant</title>
+  <link rel="stylesheet" href="styles/main.css"/>
+  <link rel="stylesheet" href="styles/animations.css"/>
+  <style>
+    .hero{min-height:100vh;display:flex;align-items:center;padding:80px 0 60px;}
+    .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+    .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:20px;padding:5px 14px;margin-bottom:24px;font-size:12px;color:var(--accent-indigo);font-weight:600;letter-spacing:0.5px;}
+    .hero-title{font-size:clamp(36px,5.5vw,66px);font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:20px;}
+    .hero-title .gradient-text{background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .hero-sub{font-size:16px;color:var(--text-secondary);line-height:1.8;margin-bottom:36px;max-width:480px;}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;}
+    .hero-stats{display:flex;gap:32px;margin-top:48px;padding-top:32px;border-top:1px solid var(--border);}
+    .hero-stat-val{font-size:24px;font-weight:800;font-family:var(--font-mono);background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .hero-stat-label{font-size:11px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;}
+    /* Hero Visual */
+    .hero-visual{position:relative;display:flex;justify-content:center;}
+    .hero-card-main{background:var(--bg-card);border:1px solid rgba(99,102,241,0.3);border-radius:var(--radius-xl);padding:28px;box-shadow:0 0 80px rgba(99,102,241,0.2),var(--shadow-lg);width:100%;max-width:400px;animation:float 5s ease-in-out infinite;position:relative;overflow:hidden;}
+    .hero-card-main::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(99,102,241,0.06),rgba(0,212,255,0.02));pointer-events:none;}
+    .floating-badge{position:absolute;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;backdrop-filter:blur(20px);box-shadow:var(--shadow-md);font-size:12px;}
+    .fb-1{top:-20px;right:-20px;animation:float 4s ease-in-out infinite;}
+    .fb-2{bottom:-20px;left:-20px;animation:float 4s ease-in-out 2s infinite;}
+    /* Features */
+    .features-section{padding:80px 0;}
+    .section-label{font-size:12px;font-weight:600;color:var(--accent-indigo);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;}
+    .section-title{font-size:clamp(26px,3.5vw,40px);font-weight:800;letter-spacing:-1px;margin-bottom:16px;}
+    .section-sub{font-size:15px;color:var(--text-secondary);max-width:560px;line-height:1.7;}
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:48px;}
+    .feature-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden;}
+    .feature-card::before{content:'';position:absolute;inset:0;background:var(--gradient-card);pointer-events:none;}
+    .feature-card:hover{border-color:var(--border-hover);transform:translateY(-4px);box-shadow:var(--shadow-glow),var(--shadow-md);}
+    .feature-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;}
+    .feature-title{font-size:16px;font-weight:700;margin-bottom:8px;}
+    .feature-desc{font-size:13px;color:var(--text-secondary);line-height:1.7;}
+    .feature-arrow{position:absolute;top:24px;right:24px;color:var(--text-muted);font-size:18px;transition:var(--transition);}
+    .feature-card:hover .feature-arrow{color:var(--accent-indigo);transform:translate(3px,-3px);}
+    /* How it works */
+    .how-section{padding:80px 0;}
+    .steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:48px;position:relative;}
+    .steps-grid::before{content:'';position:absolute;top:28px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--border),var(--border),transparent);}
+    .step-card{text-align:center;position:relative;}
+    .step-num{width:56px;height:56px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;font-family:var(--font-mono);margin:0 auto 16px;position:relative;z-index:1;transition:var(--transition);}
+    .step-card:hover .step-num{border-color:var(--accent-indigo);box-shadow:var(--shadow-glow);background:rgba(99,102,241,0.1);}
+    .step-title{font-size:14px;font-weight:700;margin-bottom:6px;}
+    .step-desc{font-size:12px;color:var(--text-muted);line-height:1.6;}
+    /* CTA */
+    .cta-section{padding:80px 0;}
+    .cta-card{background:var(--bg-card);border:1px solid rgba(99,102,241,0.3);border-radius:var(--radius-2xl);padding:60px;text-align:center;position:relative;overflow:hidden;box-shadow:var(--shadow-glow),var(--shadow-lg);}
+    .cta-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(0,212,255,0.03));pointer-events:none;}
+    .cta-title{font-size:clamp(24px,3vw,38px);font-weight:800;letter-spacing:-1px;margin-bottom:16px;}
+    .cta-sub{font-size:15px;color:var(--text-secondary);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;}
+    /* Footer */
+    .footer{border-top:1px solid var(--border);padding:32px 0;margin-top:40px;}
+    .footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+    .footer-note{font-size:12px;color:var(--text-muted);}
+    @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:40px;}.hero-visual{display:none;}.steps-grid{grid-template-columns:repeat(2,1fr);}.steps-grid::before{display:none;}}
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div><div class="mesh-bg"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <img src="assets/logo.png" alt="MediBuddy logo" style="width:32px;height:32px;object-fit:contain;"/>
+    <span class="nav-logo-text">MediBuddy</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="pages/chat.html">AI Chatbot</a></li>
+    <li><a href="pages/patient-dashboard.html">Patient</a></li>
+    <li><a href="pages/doctor-dashboard.html">Doctor</a></li>
+    <li><a href="pages/video-call.html">AI Doctor</a></li>
+  </ul>
+  <div class="nav-actions">
+    <div class="nav-pill"><span class="nav-pill-dot"></span>AI Online</div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    <a href="pages/chat.html" class="btn btn-primary btn-sm">Start Consultation</a>
+  </div>
+</nav>
+
+<div class="page">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <div class="hero-eyebrow animate-fadeInUp">
+            <span>✦</span> AI-Powered Medical Intelligence
+          </div>
+          <h1 class="hero-title animate-fadeInUp delay-1">
+            Your Health,<br>
+            <span class="gradient-text">Intelligently</span><br>
+            Understood
+          </h1>
+          <p class="hero-sub animate-fadeInUp delay-2">
+            Describe your symptoms, get instant AI triage, specialist recommendations, and connect with Dr. Aria — your AI medical companion — via video call.
+          </p>
+          <div class="hero-actions animate-fadeInUp delay-3">
+            <a href="pages/chat.html" class="btn btn-primary btn-lg">
+              <span>💬</span> Start AI Consultation
+            </a>
+            <a href="pages/video-call.html" class="btn btn-secondary btn-lg">
+              <span>🎥</span> Talk to Dr. Aria
+            </a>
+          </div>
+          <div class="hero-stats animate-fadeInUp delay-4">
+            <div>
+              <div class="hero-stat-val">41</div>
+              <div class="hero-stat-label">Diseases Covered</div>
+            </div>
+            <div>
+              <div class="hero-stat-val">132</div>
+              <div class="hero-stat-label">Symptoms Tracked</div>
+            </div>
+            <div>
+              <div class="hero-stat-val">12</div>
+              <div class="hero-stat-label">Specialties</div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual animate-fadeInUp delay-2">
+          <div class="hero-card-main">
+            <div class="floating-badge fb-1">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="color:var(--accent-green);font-size:16px;">🟢</span>
+                <div>
+                  <div style="font-size:12px;font-weight:700;">Dr. Aria Online</div>
+                  <div style="font-size:10px;color:var(--text-muted);">AI Doctor Ready</div>
+                </div>
+              </div>
+            </div>
+            <div class="floating-badge fb-2">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:16px;">🚨</span>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:#ef4444;">Critical Alert</div>
+                  <div style="font-size:10px;color:var(--text-muted);">Instant triage active</div>
+                </div>
+              </div>
+            </div>
+            <!-- AI Doctor Avatar -->
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="width:80px;height:80px;border-radius:50%;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;position:relative;" class="morph-avatar">
+                👩‍⚕️
+                <div class="call-ring"></div>
+              </div>
+              <div style="font-weight:700;font-size:15px;">Dr. Aria</div>
+              <div style="font-size:12px;color:var(--accent-green);display:flex;align-items:center;justify-content:center;gap:5px;margin-top:3px;">
+                <span class="status-dot online"></span> Available Now
+              </div>
+            </div>
+            <!-- Chat preview -->
+            <div style="background:var(--bg-secondary);border-radius:var(--radius);padding:14px;margin-bottom:12px;">
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Latest Analysis</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;">Urgency Level</span>
+                <span class="badge badge-medium">⚠ Medium</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;">Recommended</span>
+                <span style="font-size:12px;color:var(--accent-indigo);">Cardiologist</span>
+              </div>
+              <div class="progress-bar" style="margin-top:10px;">
+                <div class="progress-fill" style="width:72%;background:var(--gradient-primary);"></div>
+              </div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Confidence: 72%</div>
+            </div>
+            <!-- ECG -->
+            <div class="ecg-container">
+              <svg width="100%" height="56" viewBox="0 0 360 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="ecg-line" d="M0 28 L40 28 L55 28 L60 10 L65 46 L70 8 L75 48 L80 28 L100 28 L140 28 L155 28 L160 10 L165 46 L170 8 L175 48 L180 28 L200 28 L240 28 L255 28 L260 10 L265 46 L270 8 L275 48 L280 28 L320 28 L360 28"
+                  stroke="url(#ecg-grad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                  <linearGradient id="ecg-grad" x1="0" y1="0" x2="360" y2="0">
+                    <stop offset="0%" stop-color="#6366f1"/>
+                    <stop offset="50%" stop-color="#3b82f6"/>
+                    <stop offset="100%" stop-color="#00d4ff"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Safety Note -->
+  <div class="container" style="margin-bottom:40px;">
+    <div class="safety-note animate-fadeInUp">
+      <span class="safety-note-icon">⚠️</span>
+      <div class="safety-note-text">
+        <strong>Important Safety Notice:</strong> MediBuddy is an AI-powered informational tool and does not replace professional medical advice, diagnosis, or treatment. AI predictions are not 100% accurate. Always consult a qualified healthcare professional for medical decisions. In case of emergency, call your local emergency services immediately.
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="features-section">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label">Capabilities</div>
+        <h2 class="section-title">Everything You Need for<br><span style="background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Smart Healthcare</span></h2>
+        <p class="section-sub" style="margin:0 auto;">From symptom analysis to specialist booking — all in one intelligent platform.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" onclick="location.href='pages/chat.html'">
+          <div class="feature-icon" style="background:rgba(99,102,241,0.15);">💬</div>
+          <div class="feature-title">AI Symptom Chat</div>
+          <div class="feature-desc">Text, voice, and image-based symptom collection with intelligent follow-up questions and real-time analysis.</div>
+          <span class="feature-arrow">↗</span>
+        </div>
+        <div class="feature-card" onclick="location.href='pages/chat.html'">
+          <div class="feature-icon" style="background:rgba(239,68,68,0.15);">🚨</div>
+          <div class="feature-title">Urgency Prediction</div>
+          <div class="feature-desc">AI-powered triage engine assesses severity — Critical, High, Medium, or Low — with age and history modifiers.</div>
+          <span class="feature-arrow">↗</span>
+        </div>
+        <div class="feature-card" onclick="location.href='pages/chat.html'">
+          <div class="feature-icon" style="background:rgba(16,185,129,0.15);">🩺</div>
+          <div class="feature-title">Specialist Match</div>
+          <div class="feature-desc">Intelligent matching to the right specialist based on your symptoms across 12+ medical specialties.</div>
+          <span class="feature-arrow">↗</span>
+        </div>
+        <div class="feature-card" onclick="location.href='pages/video-call.html'">
+          <div class="feature-icon" style="background:rgba(0,212,255,0.15);">👩‍⚕️</div>
+          <div class="feature-title">Dr. Aria — AI Doctor</div>
+          <div class="feature-desc">Interactive AI female doctor for video consultations with voice interaction, real-time responses, and empathetic care.</div>
+          <span class="feature-arrow">↗</span>
+        </div>
+        <div class="feature-card" onclick="location.href='pages/video-call.html'">
+          <div class="feature-icon" style="background:rgba(139,92,246,0.15);">📅</div>
+          <div class="feature-title">Video Scheduling</div>
+          <div class="feature-desc">Mock video call scheduling with real doctors — choose your specialist, pick a time slot, and get confirmed.</div>
+          <span class="feature-arrow">↗</span>
+        </div>
+        <div class="feature-card" onclick="location.href='pages/patient-dashboard.html'">
+          <div class="feature-icon" style="background:rgba(245,158,11,0.15);">📊</div>
+          <div class="feature-title">Patient Dashboard</div>
+          <div class="feature-desc">Track your health history, vitals, appointments, and AI-generated reports in a clean personal dashboard.</div>
+          <span class="feature-arrow">↗</span>
+        </div>
+        <div class="feature-card" onclick="location.href='pages/doctor-dashboard.html'">
+          <div class="feature-icon" style="background:rgba(59,130,246,0.15);">🏥</div>
+          <div class="feature-title">Doctor Dashboard</div>
+          <div class="feature-desc">Comprehensive patient management, case queue, analytics, and AI-assisted diagnosis support for physicians.</div>
+          <span class="feature-arrow">↗</span>
+        </div>
+        <div class="feature-card" onclick="location.href='pages/chat.html'">
+          <div class="feature-icon" style="background:rgba(236,72,153,0.15);">💊</div>
+          <div class="feature-title">Medicine Suggestions</div>
+          <div class="feature-desc">AI-recommended OTC medications with safety ratings, dosage guidance, and minimal side-effect profiles.</div>
+          <span class="feature-arrow">↗</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="how-section">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label">Process</div>
+        <h2 class="section-title">How MediBuddy Works</h2>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card animate-fadeInUp delay-1">
+          <div class="step-num">01</div>
+          <div class="step-title">Describe Symptoms</div>
+          <div class="step-desc">Type, speak, or upload images of your symptoms to our AI chatbot</div>
+        </div>
+        <div class="step-card animate-fadeInUp delay-2">
+          <div class="step-num">02</div>
+          <div class="step-title">AI Analysis</div>
+          <div class="step-desc">Our engine analyzes urgency, patterns, and medical history in seconds</div>
+        </div>
+        <div class="step-card animate-fadeInUp delay-3">
+          <div class="step-num">03</div>
+          <div class="step-title">Get Recommendations</div>
+          <div class="step-desc">Receive specialist suggestions, medicine info, and urgency level</div>
+        </div>
+        <div class="step-card animate-fadeInUp delay-4">
+          <div class="step-num">04</div>
+          <div class="step-title">Connect & Schedule</div>
+          <div class="step-desc">Book a video call with Dr. Aria or schedule with a real specialist</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card">
+        <div class="orb" style="width:300px;height:300px;top:-100px;right:-100px;opacity:0.15;background:radial-gradient(circle,rgba(99,102,241,0.8),transparent 70%);position:absolute;filter:blur(80px);"></div>
+        <div style="position:relative;z-index:1;">
+          <div style="font-size:40px;margin-bottom:16px;">⚕️</div>
+          <h2 class="cta-title">Ready to Take Control<br>of Your Health?</h2>
+          <p class="cta-sub">Start your AI consultation now — it's free, instant, and available 24/7.</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a href="pages/chat.html" class="btn btn-primary btn-xl">💬 Start Free Consultation</a>
+            <a href="pages/video-call.html" class="btn btn-secondary btn-xl">🎥 Meet Dr. Aria</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="nav-logo">
+          <img src="assets/logo.png" alt="MediBuddy logo" style="width:28px;height:28px;object-fit:contain;"/>
+          <span class="nav-logo-text">MediBuddy</span>
+        </div>
+        <div class="footer-note">⚠️ For informational purposes only. Not a substitute for professional medical advice.</div>
+        <div class="footer-note">© 2026 MediBuddy. AI-Powered Health Intelligence.</div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

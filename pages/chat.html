@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Chatbot — MediBuddy</title>
+  <link rel="stylesheet" href="../styles/main.css"/>
+  <link rel="stylesheet" href="../styles/animations.css"/>
+  <style>
+    html,body{overflow:hidden;height:100%;}
+    .page{overflow:hidden;}
+    .chat-layout{display:grid;grid-template-columns:1fr 400px;height:calc(100vh - 66px);overflow:hidden;}
+    .chat-panel{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg-primary);height:100%;overflow:hidden;}
+    .chat-header{padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg-card);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .chat-messages{flex:1;overflow-y:scroll;overflow-x:hidden;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;min-height:0;}
+    .chat-messages::-webkit-scrollbar{width:5px;}
+    .chat-messages::-webkit-scrollbar-track{background:transparent;}
+    .chat-messages::-webkit-scrollbar-thumb{background:var(--accent-indigo);border-radius:4px;opacity:0.6;}
+    .quick-chips{padding:8px 20px;border-bottom:1px solid var(--border);background:var(--bg-secondary);display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex-shrink:0;}
+    .chat-input-area{padding:12px 20px;border-top:1px solid var(--border);background:var(--bg-card);flex-shrink:0;}
+    .analysis-panel{overflow-y:scroll;overflow-x:hidden;}
+    .analysis-panel::-webkit-scrollbar{width:4px;}
+    .analysis-panel::-webkit-scrollbar-track{background:transparent;}
+    .analysis-panel::-webkit-scrollbar-thumb{background:var(--accent-indigo);border-radius:4px;}
+    .chat-textarea{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:11px 16px;color:var(--text-primary);font-size:14px;font-family:var(--font-sans);resize:none;outline:none;transition:var(--transition);line-height:1.5;max-height:120px;}
+    .chat-textarea:focus{border-color:var(--accent-indigo);box-shadow:0 0 0 3px rgba(99,102,241,0.1);}
+    .chat-textarea::placeholder{color:var(--text-muted);}
+    .analysis-panel{background:var(--bg-secondary);overflow-y:auto;display:flex;flex-direction:column;border-left:1px solid var(--border);}
+    .analysis-header{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg-card);flex-shrink:0;position:sticky;top:0;z-index:10;}
+    .tab-row{display:flex;gap:3px;background:var(--bg-secondary);border-radius:var(--radius-sm);padding:3px;margin-top:10px;}
+    .tab-btn{flex:1;padding:7px 10px;border-radius:var(--radius-xs);font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:var(--transition);border:none;background:transparent;font-family:var(--font-sans);}
+    .tab-btn.active{background:var(--bg-card);color:var(--text-primary);box-shadow:var(--shadow-sm);}
+    .tab-btn:hover:not(.active){color:var(--text-secondary);}
+    .tab-content{padding:16px 18px;flex:1;overflow-y:scroll;min-height:0;}
+    .tab-content::-webkit-scrollbar{width:4px;}
+    .tab-content::-webkit-scrollbar-track{background:transparent;}
+    .tab-content::-webkit-scrollbar-thumb{background:var(--accent-indigo);border-radius:4px;}
+    .voice-active{border-color:var(--accent-red)!important;background:rgba(239,68,68,0.12)!important;animation:glow-pulse-red 1s ease-in-out infinite;}
+    .img-msg-preview{max-width:200px;border-radius:var(--radius-sm);border:1px solid var(--border);display:block;margin-top:8px;}
+    .send-btn-wrap{display:flex;flex-direction:column;gap:5px;}
+    .input-actions{display:flex;gap:6px;align-items:flex-end;}
+    .msg-image-analysis{background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:var(--radius-sm);padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text-secondary);}
+    @media(max-width:900px){.chat-layout{grid-template-columns:1fr;}.analysis-panel{display:none;}}
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div><div class="mesh-bg"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div>
+
+<nav class="navbar">
+  <a href="../index.html" class="nav-logo">
+    <img src="../assets/logo.png" alt="MediBuddy logo" style="width:32px;height:32px;object-fit:contain;"/>
+    <span class="nav-logo-text">MediBuddy</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="chat.html" class="active">AI Chatbot</a></li>
+    <li><a href="patient-dashboard.html">Patient</a></li>
+    <li><a href="doctor-dashboard.html">Doctor</a></li>
+    <li><a href="video-call.html">AI Doctor</a></li>
+  </ul>
+  <div class="nav-actions">
+    <div class="nav-pill"><span class="nav-pill-dot"></span>AI Online</div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearChat()">↺ New Chat</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="chat-layout">
+
+    <!-- ── Chat Panel ── -->
+    <div class="chat-panel">
+      <!-- Header -->
+      <div class="chat-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="position:relative;flex-shrink:0;">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;font-size:19px;">🤖</div>
+            <div class="call-ring" style="inset:-4px;border-color:var(--accent-green);"></div>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:14px;">MediBuddy Assistant</div>
+            <div style="font-size:11px;color:var(--accent-green);display:flex;align-items:center;gap:5px;">
+              <span class="status-dot online"></span>
+              <span>AI-powered triage</span>
+              <span style="color:var(--text-muted);">·</span>
+              <span style="color:var(--text-muted);">Text · Voice · Image</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <span class="badge badge-info" style="font-size:10px;">Text</span>
+          <span class="badge badge-purple" style="font-size:10px;">Voice</span>
+          <span class="badge badge-low" style="font-size:10px;">Image</span>
+          <span id="geminiBadge" class="badge badge-info" style="font-size:10px;cursor:pointer;" onclick="openModal('apiKeyModal')" title="Configure Gemini AI">⚙ Set API Key</span>
+          <div id="stageIndicator" style="margin-left:6px;font-size:10px;color:var(--text-muted);background:var(--bg-secondary);border:1px solid var(--border);border-radius:20px;padding:3px 10px;">Step 1/5</div>
+        </div>
+      </div>
+
+      <!-- Quick chips -->
+      <div class="quick-chips">
+        <span style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;">Quick:</span>
+        <span class="chip symptom-chip" data-symptom="I have a headache and fever">🤕 Headache & Fever</span>
+        <span class="chip symptom-chip" data-symptom="I have chest pain and difficulty breathing">❤️ Chest Pain</span>
+        <span class="chip symptom-chip" data-symptom="I have a persistent cough and sore throat">🤧 Cough & Cold</span>
+        <span class="chip symptom-chip" data-symptom="I have severe abdominal pain and nausea">🫃 Stomach Pain</span>
+        <span class="chip symptom-chip" data-symptom="I feel anxious and can't sleep">😰 Anxiety</span>
+        <span class="chip symptom-chip" data-symptom="I have back pain and joint stiffness">🦴 Back Pain</span>
+        <span class="chip symptom-chip" data-symptom="I have a rash and skin irritation">🩹 Skin Rash</span>
+        <span class="chip symptom-chip" data-symptom="I have dizziness and blurred vision">👁️ Dizziness</span>
+      </div>
+
+      <!-- Messages -->
+      <div id="chatMessages" class="chat-messages"></div>
+
+      <!-- Input -->
+      <div class="chat-input-area">
+        <!-- Image preview -->
+        <div id="imagePreviewArea" style="display:none;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--bg-secondary);border-radius:var(--radius-sm);padding:8px 12px;border:1px solid var(--border);">
+            <img id="imagePreviewThumb" style="width:38px;height:38px;object-fit:cover;border-radius:6px;" alt="preview"/>
+            <span style="font-size:12px;color:var(--text-secondary);flex:1;" id="imagePreviewName">image.jpg</span>
+            <button onclick="clearImagePreview()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;" aria-label="Remove image">✕</button>
+          </div>
+        </div>
+        <div class="input-actions">
+          <div style="flex:1;position:relative;">
+            <textarea id="chatInput" class="chat-textarea" placeholder="Describe your symptoms in detail..." rows="2" aria-label="Symptom description"></textarea>
+          </div>
+          <div class="send-btn-wrap">
+            <button id="voiceBtn" class="btn btn-ghost btn-icon" title="Voice input" aria-label="Voice input">🎤</button>
+            <button class="btn btn-ghost btn-icon" title="Upload image" aria-label="Upload image" onclick="document.getElementById('imageInput').click()">📷</button>
+          </div>
+          <button id="sendBtn" class="btn btn-primary" style="width:44px;height:44px;border-radius:var(--radius);font-size:18px;padding:0;flex-shrink:0;align-self:flex-end;" aria-label="Send message">➤</button>
+        </div>
+        <input type="file" id="imageInput" accept="image/*" style="display:none;" aria-label="Upload symptom image"/>
+        <div style="margin-top:7px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:10px;color:var(--text-muted);">⚠️ AI responses are informational only — not a substitute for professional medical advice</span>
+          <span id="charCount" style="font-size:10px;color:var(--text-muted);">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Analysis Panel ── -->
+    <div class="analysis-panel">
+      <div class="analysis-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-weight:700;font-size:14px;">AI Analysis Panel</div>
+          <span id="analysisStatus" class="badge badge-info" style="font-size:10px;">Waiting</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Results appear after symptom collection</div>
+        <div class="tab-row">
+          <button class="tab-btn active" onclick="switchTab('urgency',this)" id="tabUrgency">🚨 Urgency</button>
+          <button class="tab-btn" onclick="switchTab('specialist',this)" id="tabSpecialist">🩺 Specialist</button>
+          <button class="tab-btn" onclick="switchTab('medicine',this)" id="tabMedicine">💊 Medicine</button>
+        </div>
+      </div>
+
+      <div class="tab-content">
+        <div id="tab-urgency">
+          <div id="urgencyResult">
+            <div style="text-align:center;padding:40px 16px;color:var(--text-muted);">
+              <div style="font-size:48px;margin-bottom:12px;opacity:0.2;">🔍</div>
+              <div style="font-size:13px;line-height:1.6;">Complete the symptom chat to see your urgency assessment</div>
+            </div>
+          </div>
+        </div>
+        <div id="tab-specialist" style="display:none;">
+          <div id="specialistResult">
+            <div style="text-align:center;padding:40px 16px;color:var(--text-muted);">
+              <div style="font-size:48px;margin-bottom:12px;opacity:0.2;">🩺</div>
+              <div style="font-size:13px;line-height:1.6;">Specialist recommendations will appear here</div>
+            </div>
+          </div>
+        </div>
+        <div id="tab-medicine" style="display:none;">
+          <div id="medicineResult">
+            <div style="text-align:center;padding:40px 16px;color:var(--text-muted);">
+              <div style="font-size:48px;margin-bottom:12px;opacity:0.2;">💊</div>
+              <div style="font-size:13px;line-height:1.6;">General OTC medicine suggestions will appear here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dr. Aria CTA -->
+      <div style="padding:0 18px 18px;margin-top:auto;">
+        <div class="card-neon" style="text-align:center;padding:18px;">
+          <div style="font-size:32px;margin-bottom:8px;position:relative;display:inline-block;">
+            👩‍⚕️
+            <div class="call-ring" style="inset:-6px;"></div>
+          </div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px;">Talk to Dr. Aria</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">AI video consultation with voice interaction</div>
+          <a href="video-call.html" class="btn btn-primary" style="width:100%;justify-content:center;font-size:13px;">🎥 Start Video Call</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule Modal -->
+<div class="modal-overlay" id="scheduleModal" role="dialog" aria-modal="true" aria-labelledby="scheduleModalTitle">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="scheduleModalTitle">Schedule Appointment</h3>
+      <button class="modal-close" onclick="closeModal('scheduleModal')" aria-label="Close">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <div class="form-label">Select Doctor</div>
+        <div id="doctorList" style="max-height:280px;overflow-y:auto;"></div>
+      </div>
+      <div>
+        <div class="form-label">Select Day</div>
+        <div id="daySlots" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;"></div>
+        <div class="form-label">Select Time</div>
+        <div id="timeSlots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;"></div>
+      </div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeModal('scheduleModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAppointment()">✅ Confirm Appointment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Appointment Confirmed ✅</h3>
+      <button class="modal-close" onclick="closeModal('confirmModal')" aria-label="Close">✕</button>
+    </div>
+    <div id="confirmDetails"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Close</button>
+      <a href="patient-dashboard.html" class="btn btn-primary">View Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="apiKeyModalTitle">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="apiKeyModalTitle">
+        <span style="background:linear-gradient(135deg,#4285f4,#34a853);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">✦ Connect Gemini AI</span>
+      </h3>
+      <button class="modal-close" onclick="closeModal('apiKeyModal')" aria-label="Close">✕</button>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+          Connect your <strong style="color:#4285f4;">Google Gemini API key</strong> to enable real AI-powered healthcare conversations using <strong>Gemini 1.5 Flash</strong>.<br><br>
+          Your key is stored only in your browser's localStorage and never sent anywhere except directly to Google's API.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="geminiKeyInput">Gemini API Key</label>
+        <div style="display:flex;gap:8px;">
+          <input type="password" id="geminiKeyInput" class="form-input" placeholder="AIza..." autocomplete="off" aria-label="Gemini API Key"/>
+          <button class="btn btn-ghost btn-sm" id="toggleKeyVisibility" onclick="toggleKeyVis()" title="Show/hide key" style="flex-shrink:0;">👁</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">
+          Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--accent-indigo);">aistudio.google.com</a>
+        </div>
+      </div>
+
+      <div id="keyStatus" style="display:none;margin-bottom:12px;"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
+      <button class="btn btn-ghost btn-sm" id="clearKeyBtn" onclick="clearGeminiKey()" style="color:var(--accent-red);">🗑 Remove Key</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="closeModal('apiKeyModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveGeminiKey()">✦ Connect Gemini</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/agent-api.js"></script>
+<script src="../js/gemini.js"></script>
+<script src="../js/urgency.js"></script>
+<script src="../js/specialist.js"></script>
+<script src="../js/medicine.js"></script>
+<script src="../js/scheduler.js"></script>
+<script src="../js/chatbot.js"></script>
+<script>
+// Tab switching
+function switchTab(tab, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).style.display = 'block';
+  btn.classList.add('active');
+}
+
+// Gemini key management
+function saveGeminiKey() {
+  const input = document.getElementById('geminiKeyInput');
+  const status = document.getElementById('keyStatus');
+  const key = input?.value.trim();
+  if (!key || !key.startsWith('AIza')) {
+    status.style.display = 'block';
+    status.innerHTML = '<div class="safety-note"><span class="safety-note-icon">❌</span><div class="safety-note-text">Please enter a valid Gemini API key (starts with "AIza").</div></div>';
+    return;
+  }
+  geminiAI.setApiKey(key);
+  status.style.display = 'block';
+  status.innerHTML = '<div class="safety-note" style="border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><span class="safety-note-icon">✅</span><div class="safety-note-text" style="color:var(--accent-green);">Gemini AI connected! Restarting chat with AI mode...</div></div>';
+  setTimeout(() => { closeModal('apiKeyModal'); clearChat(true); }, 1200);
+}
+
+function clearGeminiKey() {
+  geminiAI.clearKey();
+  document.getElementById('geminiKeyInput').value = '';
+  document.getElementById('keyStatus').style.display = 'none';
+  Toast.show('Gemini API key removed. Using built-in AI mode.', 'info');
+  closeModal('apiKeyModal');
+  clearChat(false);
+}
+
+function toggleKeyVis() {
+  const input = document.getElementById('geminiKeyInput');
+  if (input) input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+// Clear / reset chat
+function clearChat(withGemini) {
+  const msgs = document.getElementById('chatMessages');
+  if (msgs) msgs.innerHTML = '';
+  ['urgencyResult','specialistResult','medicineResult'].forEach(id => {
+    const el = document.getElementById(id);
+    const icons = { urgencyResult:'🔍', specialistResult:'🩺', medicineResult:'💊' };
+    if (el) el.innerHTML = `<div style="text-align:center;padding:40px 16px;color:var(--text-muted);"><div style="font-size:44px;margin-bottom:12px;opacity:0.2;">${icons[id]}</div><div style="font-size:13px;">Complete the symptom chat to see results</div></div>`;
+  });
+  const st = document.getElementById('analysisStatus');
+  if (st) { st.textContent = 'Waiting'; st.className = 'badge badge-info'; }
+  const si = document.getElementById('stageIndicator');
+  if (si) si.textContent = 'Step 1/5';
+  if (typeof geminiAI !== 'undefined') geminiAI.reset();
+  if (typeof agentAPI !== 'undefined') agentAPI.resetSession();
+  if (typeof chatbot !== 'undefined' && chatbot) {
+    const useG = withGemini !== undefined ? withGemini : (typeof geminiAI !== 'undefined' && geminiAI.isConfigured);
+    chatbot.useGemini = useG;
+    chatbot.stage = useG ? CHAT_STAGES.AI : CHAT_STAGES.GREETING;
+    chatbot.patientData = { name:'', age:0, symptoms:'', duration:'', history:[], followups:[] };
+    chatbot.messageCount = 0; chatbot.analysisComplete = false; chatbot.pendingImage = null;
+    chatbot.updateGeminiBadge(useG);
+    const greeting = useG
+      ? "Hello! I'm MediBuddy, powered by Google Gemini AI. I'm your intelligent health assistant. How are you feeling today? Please describe your symptoms."
+      : AI_RESPONSES.greeting;
+    setTimeout(() => chatbot.addMessage(greeting, 'ai'), 300);
+  }
+}
+
+function clearImagePreview() {
+  document.getElementById('imagePreviewArea').style.display = 'none';
+  document.getElementById('imageInput').value = '';
+  if (typeof chatbot !== 'undefined') chatbot.pendingImage = null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Pre-fill saved key
+  const saved = localStorage.getItem('gemini_api_key');
+  if (saved) { const inp = document.getElementById('geminiKeyInput'); if (inp) inp.value = saved; }
+
+  // Image input
+  document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('imagePreviewThumb').src = ev.target.result;
+      document.getElementById('imagePreviewName').textContent = file.name;
+      document.getElementById('imagePreviewArea').style.display = 'block';
+      if (typeof chatbot !== 'undefined') chatbot.pendingImage = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Char counter
+  const input = document.getElementById('chatInput');
+  if (input) input.addEventListener('input', () => {
+    const cc = document.getElementById('charCount'); if (cc) cc.textContent = input.value.length;
+  });
+
+  // Stage indicator patch (rule-based only)
+  const origRB = MediChatbot.prototype.processRuleBased;
+  MediChatbot.prototype.processRuleBased = function(text) {
+    origRB.call(this, text);
+    const map = { greeting:'Step 1/5', name:'Step 1/5', age:'Step 2/5', symptoms:'Step 3/5', duration:'Step 4/5', history:'Step 5/5', analysis:'Analyzing...', followup:'Complete' };
+    const ind = document.getElementById('stageIndicator'); if (ind) ind.textContent = map[this.stage] || '';
+    const st = document.getElementById('analysisStatus');
+    if (st && this.stage === 'analysis') { st.textContent = 'Analyzing'; st.className = 'badge badge-medium'; }
+  };
+});
+</script>
+</body>
+</html>

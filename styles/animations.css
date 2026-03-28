@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════════════════════════
+   MediAI — Animation Library v3
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── ECG / Heartbeat Line ── */
+.ecg-container{width:100%;height:56px;overflow:hidden;position:relative;}
+.ecg-line{stroke-dasharray:1200;stroke-dashoffset:1200;animation:ecg-draw 2.5s ease forwards,ecg-loop 3.5s linear 2.5s infinite;}
+@keyframes ecg-draw{to{stroke-dashoffset:0;}}
+@keyframes ecg-loop{0%{stroke-dashoffset:0;}100%{stroke-dashoffset:-1200;}}
+
+/* ── Neon Glows ── */
+.neon-indigo{box-shadow:0 0 10px rgba(99,102,241,0.5),0 0 24px rgba(99,102,241,0.25),inset 0 0 10px rgba(99,102,241,0.06);}
+.neon-cyan{box-shadow:0 0 10px rgba(0,212,255,0.5),0 0 24px rgba(0,212,255,0.25);}
+.neon-green{box-shadow:0 0 10px rgba(16,185,129,0.5),0 0 24px rgba(16,185,129,0.25);}
+.neon-red{box-shadow:0 0 10px rgba(239,68,68,0.5),0 0 24px rgba(239,68,68,0.25);}
+.neon-purple{box-shadow:0 0 10px rgba(139,92,246,0.5),0 0 24px rgba(139,92,246,0.25);}
+.neon-amber{box-shadow:0 0 10px rgba(245,158,11,0.5),0 0 24px rgba(245,158,11,0.25);}
+
+/* ── Glitch ── */
+.glitch{position:relative;}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;}
+.glitch::before{color:#6366f1;animation:glitch-1 4s infinite;clip-path:polygon(0 0,100% 0,100% 35%,0 35%);}
+.glitch::after{color:#f43f5e;animation:glitch-2 4s infinite;clip-path:polygon(0 65%,100% 65%,100% 100%,0 100%);}
+@keyframes glitch-1{0%,88%,100%{transform:translate(0);}90%{transform:translate(-3px,1px);}92%{transform:translate(3px,-1px);}94%{transform:translate(-1px,2px);}}
+@keyframes glitch-2{0%,88%,100%{transform:translate(0);}90%{transform:translate(3px,-1px);}92%{transform:translate(-3px,1px);}94%{transform:translate(1px,-2px);}}
+
+/* ── Radar Pulse ── */
+.radar-pulse{position:relative;}
+.radar-pulse::before,.radar-pulse::after{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--accent-indigo);animation:radar-expand 2.5s ease-out infinite;}
+.radar-pulse::after{animation-delay:1.25s;}
+@keyframes radar-expand{0%{transform:scale(0.8);opacity:0.8;}100%{transform:scale(2.5);opacity:0;}}
+
+/* ── Call Ring ── */
+.call-ring{position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent-green);animation:call-ring 1.8s ease-out infinite;}
+.call-ring:nth-child(2){animation-delay:0.6s;}
+.call-ring:nth-child(3){animation-delay:1.2s;}
+@keyframes call-ring{0%{transform:scale(1);opacity:0.8;}100%{transform:scale(2.2);opacity:0;}}
+
+/* ── Shimmer ── */
+.shimmer{background:linear-gradient(90deg,var(--bg-card) 25%,var(--bg-card-hover) 50%,var(--bg-card) 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ── Typewriter ── */
+.typewriter{overflow:hidden;white-space:nowrap;border-right:2px solid var(--accent-indigo);animation:typewriter 3s steps(40) forwards,cursor-blink 0.8s step-end infinite;}
+@keyframes typewriter{from{width:0;}to{width:100%;}}
+@keyframes cursor-blink{0%,100%{border-color:var(--accent-indigo);}50%{border-color:transparent;}}
+
+/* ── Heartbeat ── */
+.heartbeat{animation:heartbeat 1.6s ease-in-out infinite;}
+@keyframes heartbeat{0%,100%{transform:scale(1);}14%{transform:scale(1.18);}28%{transform:scale(1);}42%{transform:scale(1.12);}70%{transform:scale(1);}}
+
+/* ── Rotate ── */
+.rotate-slow{animation:rotate 10s linear infinite;}
+.rotate-medium{animation:rotate 5s linear infinite;}
+.rotate-fast{animation:rotate 2s linear infinite;}
+@keyframes rotate{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+/* ── Bounce ── */
+.bounce{animation:bounce-anim 1s ease infinite;}
+@keyframes bounce-anim{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+
+/* ── Morph Avatar ── */
+.morph-avatar{animation:morph-avatar 8s ease-in-out infinite;}
+@keyframes morph-avatar{0%,100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%;}25%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%;}50%{border-radius:50% 50% 30% 70%/40% 60% 40% 60%;}75%{border-radius:40% 60% 60% 40%/60% 40% 60% 40%;}}
+
+/* ── Ripple ── */
+.ripple-container{position:relative;overflow:hidden;}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.12);transform:scale(0);animation:ripple-anim 0.7s linear;pointer-events:none;}
+@keyframes ripple-anim{to{transform:scale(4);opacity:0;}}
+
+/* ── Data Stream ── */
+.data-stream{position:relative;overflow:hidden;}
+.data-stream::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(99,102,241,0.025) 2px,rgba(99,102,241,0.025) 4px);animation:data-scroll 25s linear infinite;pointer-events:none;}
+@keyframes data-scroll{0%{transform:translateY(0);}100%{transform:translateY(-50%);}}
+
+/* ── Particle ── */
+.particle{position:absolute;border-radius:50%;background:var(--accent-indigo);opacity:0;animation:particle-rise linear infinite;}
+@keyframes particle-rise{0%{transform:translateY(100%);opacity:0;}10%{opacity:0.6;}90%{opacity:0.2;}100%{transform:translateY(-100vh);opacity:0;}}
+
+/* ── Scan Line ── */
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(99,102,241,0.6),transparent);animation:scan 3s ease-in-out infinite;}
+@keyframes scan{0%{top:0;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:100%;opacity:0;}}
+
+/* ── Waveform ── */
+.waveform{display:flex;align-items:center;gap:3px;height:32px;}
+.wave-bar{width:3px;border-radius:2px;background:var(--accent-indigo);animation:wave-bar 1.2s ease-in-out infinite;}
+.wave-bar:nth-child(1){animation-delay:0s;height:40%;}
+.wave-bar:nth-child(2){animation-delay:0.1s;height:70%;}
+.wave-bar:nth-child(3){animation-delay:0.2s;height:100%;}
+.wave-bar:nth-child(4){animation-delay:0.3s;height:60%;}
+.wave-bar:nth-child(5){animation-delay:0.4s;height:80%;}
+.wave-bar:nth-child(6){animation-delay:0.5s;height:45%;}
+.wave-bar:nth-child(7){animation-delay:0.6s;height:90%;}
+.wave-bar:nth-child(8){animation-delay:0.7s;height:55%;}
+@keyframes wave-bar{0%,100%{transform:scaleY(0.4);}50%{transform:scaleY(1);}}
+
+/* ── Gradient Border ── */
+.gradient-border{position:relative;}
+.gradient-border::before{content:'';position:absolute;inset:-1px;border-radius:inherit;background:var(--gradient-primary);z-index:-1;opacity:0;transition:var(--transition);}
+.gradient-border:hover::before{opacity:1;}
+
+/* ── Glow Pulse ── */
+.glow-pulse-indigo{animation:glow-pulse-indigo 2s ease-in-out infinite;}
+.glow-pulse-green{animation:glow-pulse-green 2s ease-in-out infinite;}
+.glow-pulse-red{animation:glow-pulse-red 2s ease-in-out infinite;}
+@keyframes glow-pulse-indigo{0%,100%{box-shadow:0 0 10px rgba(99,102,241,0.3);}50%{box-shadow:0 0 25px rgba(99,102,241,0.7);}}
+@keyframes glow-pulse-green{0%,100%{box-shadow:0 0 10px rgba(16,185,129,0.3);}50%{box-shadow:0 0 25px rgba(16,185,129,0.7);}}
+@keyframes glow-pulse-red{0%,100%{box-shadow:0 0 10px rgba(239,68,68,0.3);}50%{box-shadow:0 0 25px rgba(239,68,68,0.7);}}
+
+/* ── Speaking Indicator ── */
+.speaking-ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--accent-green);animation:speaking-pulse 0.8s ease-in-out infinite;}
+@keyframes speaking-pulse{0%,100%{transform:scale(1);opacity:0.8;}50%{transform:scale(1.08);opacity:1;}}
+
+/* ── Stagger Delays ── */
+.delay-1{animation-delay:0.1s;}.delay-2{animation-delay:0.2s;}.delay-3{animation-delay:0.3s;}.delay-4{animation-delay:0.4s;}.delay-5{animation-delay:0.5s;}

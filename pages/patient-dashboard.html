@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Dashboard — MediBuddy</title>
+  <link rel="stylesheet" href="../styles/main.css"/>
+  <link rel="stylesheet" href="../styles/animations.css"/>
+  <style>
+    html,body{overflow:hidden;height:100%;}
+    .layout-sidebar main{overflow-y:scroll!important;}
+    .layout-sidebar main::-webkit-scrollbar{width:5px;}
+    .layout-sidebar main::-webkit-scrollbar-track{background:transparent;}
+    .layout-sidebar main::-webkit-scrollbar-thumb{background:var(--accent-indigo);border-radius:4px;}
+    .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+    .vitals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px;}
+    .vital-mini-chart{display:flex;align-items:flex-end;gap:2px;height:28px;margin-top:8px;}
+    .vital-bar{width:4px;border-radius:2px;background:var(--accent-indigo);opacity:0.6;transition:height 0.5s ease;}
+    .health-ring-wrap{position:relative;width:80px;height:80px;margin:0 auto 10px;}
+    .health-ring-wrap svg{transform:rotate(-90deg);}
+    .health-ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;font-family:var(--font-mono);background:var(--gradient-green);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .med-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-secondary);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:7px;transition:var(--transition);}
+    .med-row:hover{border-color:var(--border-hover);}
+    @media(max-width:1100px){.dash-stats{grid-template-columns:repeat(2,1fr);}.vitals-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div><div class="mesh-bg"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div>
+
+<nav class="navbar">
+  <a href="../index.html" class="nav-logo">
+    <img src="../assets/logo.png" alt="MediBuddy logo" style="width:32px;height:32px;object-fit:contain;"/>
+    <span class="nav-logo-text">MediBuddy</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="chat.html">AI Chatbot</a></li>
+    <li><a href="patient-dashboard.html" class="active">Patient</a></li>
+    <li><a href="doctor-dashboard.html">Doctor</a></li>
+    <li><a href="video-call.html">AI Doctor</a></li>
+  </ul>
+  <div class="nav-actions">
+    <div class="nav-pill"><span class="nav-pill-dot"></span>AI Online</div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    <a href="chat.html" class="btn btn-primary btn-sm">+ New Consultation</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="layout-sidebar">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-profile">
+        <div class="sidebar-avatar">👤</div>
+        <div style="font-weight:700;font-size:15px;">Alex Johnson</div>
+        <div style="font-size:11px;color:var(--text-muted);">Patient ID: #MED-2026-001</div>
+        <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="badge badge-info">Age 32</span>
+          <span class="badge badge-low">Healthy</span>
+        </div>
+        <!-- Health score ring — shown only when data exists -->
+        <div style="margin-top:16px;" id="healthScoreWrap" style="display:none;">
+          <div class="health-ring-wrap">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="var(--bg-secondary)" stroke-width="6"/>
+              <circle cx="40" cy="40" r="32" fill="none" stroke="url(#healthGrad)" stroke-width="6"
+                stroke-dasharray="201" stroke-dashoffset="201" id="healthRingFill" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="healthGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#10b981"/>
+                  <stop offset="100%" stop-color="#34d399"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="health-ring-val" id="healthScoreVal">—</div>
+          </div>
+          <div style="text-align:center;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Health Score</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <ul class="sidebar-nav">
+        <li><a href="#overview" class="active"><span class="nav-icon">📊</span>Overview</a></li>
+        <li><a href="#vitals"><span class="nav-icon">💓</span>Vitals</a></li>
+        <li><a href="#appointments"><span class="nav-icon">📅</span>Appointments</a></li>
+        <li><a href="#history"><span class="nav-icon">📋</span>Health History</a></li>
+        <li><a href="#medicines"><span class="nav-icon">💊</span>Medicines</a></li>
+        <li><a href="#reports"><span class="nav-icon">📄</span>AI Reports</a></li>
+      </ul>
+      <div class="divider"></div>
+      <div style="padding:0 4px;display:flex;flex-direction:column;gap:7px;">
+        <a href="chat.html" class="btn btn-primary" style="width:100%;justify-content:center;font-size:13px;">🩺 New Consultation</a>
+        <a href="video-call.html" class="btn btn-outline" style="width:100%;justify-content:center;font-size:13px;">🎥 Talk to Dr. Aria</a>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main style="padding:24px 28px;overflow-y:auto;" id="overview">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div>
+          <h1 style="font-size:21px;font-weight:800;margin-bottom:2px;">Patient Dashboard</h1>
+          <p style="font-size:12px;color:var(--text-muted);">Your health overview and AI assessments</p>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">Last updated: <span style="color:var(--accent-indigo);">Just now</span></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="dash-stats stagger">
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:6px;">📋</div>
+          <div class="stat-value" style="background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;" id="sc1">—</div>
+          <div class="stat-label">Total Consultations</div>
+          <div class="stat-change" style="color:var(--text-muted);">From your history</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:6px;">📅</div>
+          <div class="stat-value" style="background:var(--gradient-green);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;" id="sc2">—</div>
+          <div class="stat-label">Upcoming Appointments</div>
+          <div class="stat-change" style="color:var(--text-muted);" id="nextApptLabel">No appointments yet</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:6px;">💊</div>
+          <div class="stat-value" style="background:var(--gradient-purple);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;" id="sc3">—</div>
+          <div class="stat-label">Active Medications</div>
+          <div class="stat-change" style="color:var(--text-muted);">OTC only</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:6px;">🏥</div>
+          <div class="stat-value" style="background:var(--gradient-amber);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;">—</div>
+          <div class="stat-label">Health Score</div>
+          <div class="stat-change" style="color:var(--text-muted);">Complete a consultation</div>
+        </div>
+      </div>
+
+      <!-- Vitals -->
+      <div id="vitals" style="margin-bottom:22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h2 style="font-size:15px;font-weight:700;">Live Vitals</h2>
+          <span class="badge badge-medium" style="font-size:10px;">Connect a device to see real data</span>
+        </div>
+        <div class="vitals-grid">
+          <div class="vital-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:16px;">❤️</span>
+              <span class="badge badge-info" style="font-size:10px;">No device</span>
+            </div>
+            <div class="vital-value" id="heartRate" style="font-size:22px;">—</div>
+            <span class="vital-unit">bpm</span>
+            <div class="vital-label">Heart Rate</div>
+            <div class="vital-trend" style="color:var(--text-muted);">Connect a wearable</div>
+            <div class="vital-mini-chart" id="hrChart"></div>
+          </div>
+          <div class="vital-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:16px;">🩸</span>
+              <span class="badge badge-info" style="font-size:10px;">No device</span>
+            </div>
+            <div class="vital-value" id="bloodPressure" style="font-size:22px;">—</div>
+            <div class="vital-label">Blood Pressure</div>
+            <div class="vital-trend" style="color:var(--text-muted);">Connect a device</div>
+          </div>
+          <div class="vital-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:16px;">🌡️</span>
+              <span class="badge badge-info" style="font-size:10px;">No device</span>
+            </div>
+            <div class="vital-value" id="temperature" style="font-size:22px;">—</div>
+            <span class="vital-unit">°F</span>
+            <div class="vital-label">Temperature</div>
+            <div class="vital-trend" style="color:var(--text-muted);">Connect a device</div>
+          </div>
+          <div class="vital-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:16px;">🫁</span>
+              <span class="badge badge-info" style="font-size:10px;">No device</span>
+            </div>
+            <div class="vital-value" id="oxygenSat" style="font-size:22px;">—</div>
+            <span class="vital-unit">%</span>
+            <div class="vital-label">O₂ Saturation</div>
+            <div class="vital-trend" style="color:var(--text-muted);">Connect a device</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appointments + Reports -->
+      <div class="two-col" id="appointments">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <h2 style="font-size:15px;font-weight:700;">Upcoming Appointments</h2>
+            <a href="chat.html" class="btn btn-ghost btn-sm" style="font-size:11px;">+ Book</a>
+          </div>
+          <div id="appointmentsList">
+            <div class="appt-item">
+              <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">❤️</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:13px;" class="truncate">Dr. Sarah Chen</div>
+                <div style="font-size:11px;color:var(--text-muted);">Cardiologist · Video Call</div>
+                <div style="font-size:11px;color:var(--accent-indigo);margin-top:1px;">Today 3:00 PM</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+                <span class="badge badge-info" style="font-size:10px;">Confirmed</span>
+                <a href="video-call.html" class="btn btn-primary btn-xs">Join</a>
+              </div>
+            </div>
+            <div class="appt-item">
+              <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:rgba(139,92,246,0.1);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🧠</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:13px;">Dr. James Okafor</div>
+                <div style="font-size:11px;color:var(--text-muted);">Neurologist · Video Call</div>
+                <div style="font-size:11px;color:var(--accent-indigo);margin-top:1px;">Tomorrow 10:00 AM</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+                <span class="badge badge-medium" style="font-size:10px;">Pending</span>
+                <button class="btn btn-ghost btn-xs">Reschedule</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Reports -->
+        <div id="reports">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <h2 style="font-size:15px;font-weight:700;">Recent AI Reports</h2>
+            <span class="badge badge-info" style="font-size:10px;">AI Generated</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div class="card-flat" style="padding:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <div style="font-weight:600;font-size:12px;">Chest Tightness Assessment</div>
+                <span class="badge badge-high" style="font-size:10px;">High</span>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px;">Symptoms: chest pain, shortness of breath</div>
+              <div class="urgency-bar"><div class="urgency-fill" style="width:75%;background:var(--gradient-amber);"></div></div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">2 days ago · Cardiologist recommended</div>
+            </div>
+            <div class="card-flat" style="padding:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <div style="font-weight:600;font-size:12px;">Headache & Fatigue</div>
+                <span class="badge badge-medium" style="font-size:10px;">Medium</span>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px;">Symptoms: persistent headache, fatigue</div>
+              <div class="urgency-bar"><div class="urgency-fill" style="width:50%;background:linear-gradient(90deg,#f59e0b,#f59e0b88);"></div></div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">5 days ago · Neurologist recommended</div>
+            </div>
+            <div class="card-flat" style="padding:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <div style="font-weight:600;font-size:12px;">Sore Throat & Cough</div>
+                <span class="badge badge-low" style="font-size:10px;">Low</span>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px;">Symptoms: sore throat, mild cough</div>
+              <div class="urgency-bar"><div class="urgency-fill" style="width:25%;background:var(--gradient-green);"></div></div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">13 days ago · ENT recommended</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History + Medicines -->
+      <div class="two-col">
+        <div id="history">
+          <h2 style="font-size:15px;font-weight:700;margin-bottom:10px;">Health History</h2>
+          <div class="card-flat" style="padding:16px;">
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-time">March 26, 2026</div>
+                <div class="timeline-content">AI consultation — Chest pain assessment. Urgency: High. Referred to cardiologist.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">March 21, 2026</div>
+                <div class="timeline-content">Video call with Dr. Aria — Headache & fatigue. Recommended rest and hydration.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">March 15, 2026</div>
+                <div class="timeline-content">AI consultation — Sore throat & cough. Urgency: Low. OTC lozenges suggested.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">February 28, 2026</div>
+                <div class="timeline-content">Appointment with Dr. Priya Sharma — General checkup. All vitals normal.</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">February 10, 2026</div>
+                <div class="timeline-content">AI consultation — Anxiety & insomnia. Urgency: Medium. Psychiatrist recommended.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="medicines">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <h2 style="font-size:15px;font-weight:700;">Current Medicines</h2>
+            <span class="badge badge-medium" style="font-size:10px;">OTC Only</span>
+          </div>
+          <div class="safety-note" style="margin-bottom:10px;">
+            <span class="safety-note-icon">⚠️</span>
+            <div class="safety-note-text" style="font-size:11px;"><strong>AI Safety Disclaimer:</strong> AI-suggested OTC medicines only. Always consult a licensed physician. AI is not 100% accurate.</div>
+          </div>
+          <div class="med-row">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="font-size:17px;">💊</span>
+              <div>
+                <div style="font-weight:600;font-size:12px;">Paracetamol 500mg</div>
+                <div style="font-size:10px;color:var(--text-muted);">Every 6 hours as needed</div>
+              </div>
+            </div>
+            <span class="badge badge-low" style="font-size:10px;">Active</span>
+          </div>
+          <div class="med-row">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="font-size:17px;">💊</span>
+              <div>
+                <div style="font-weight:600;font-size:12px;">Cetirizine 10mg</div>
+                <div style="font-size:10px;color:var(--text-muted);">Once daily — allergy</div>
+              </div>
+            </div>
+            <span class="badge badge-low" style="font-size:10px;">Active</span>
+          </div>
+          <div class="med-row">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="font-size:17px;">💊</span>
+              <div>
+                <div style="font-weight:600;font-size:12px;">Melatonin 3mg</div>
+                <div style="font-size:10px;color:var(--text-muted);">30 min before bed</div>
+              </div>
+            </div>
+            <span class="badge badge-medium" style="font-size:10px;">As needed</span>
+          </div>
+          <div class="med-row">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="font-size:17px;">💊</span>
+              <div>
+                <div style="font-weight:600;font-size:12px;">Vitamin D3 1000IU</div>
+                <div style="font-size:10px;color:var(--text-muted);">Once daily with food</div>
+              </div>
+            </div>
+            <span class="badge badge-low" style="font-size:10px;">Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Safety note -->
+      <div class="safety-note">
+        <span class="safety-note-icon">⚠️</span>
+        <div class="safety-note-text">
+          <strong>Important Medical Disclaimer:</strong> MediBuddy is an AI-powered informational tool and does NOT replace professional medical advice, diagnosis, or treatment. AI systems are not 100% accurate. Always consult a qualified, licensed healthcare professional before making any medical decisions. In emergencies, call 911 (US), 999 (UK), or 112 (EU) immediately.
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/scheduler.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Load real appointment count from localStorage
+  const saved = JSON.parse(localStorage.getItem('appointments') || '[]');
+  const sc2El = document.getElementById('sc2');
+  const sc1El = document.getElementById('sc1');
+  const sc3El = document.getElementById('sc3');
+  const nextLabel = document.getElementById('nextApptLabel');
+
+  if (sc2El) sc2El.textContent = saved.length > 0 ? saved.length : '0';
+  if (sc1El) sc1El.textContent = saved.length > 0 ? saved.length : '0';
+  if (sc3El) sc3El.textContent = '3'; // from the medicines list below
+  if (nextLabel && saved.length > 0) {
+    const next = saved[saved.length - 1];
+    nextLabel.textContent = `Next: ${next.day} ${next.time}`;
+    nextLabel.className = 'stat-change up';
+  }
+
+  // Render saved appointments
+  if (saved.length > 0) {
+    const list = document.getElementById('appointmentsList');
+    saved.slice().reverse().forEach(appt => {
+      const item = document.createElement('div');
+      item.className = 'appt-item';
+      item.innerHTML = `
+        <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:${appt.doctor?.color||'#6366f1'}18;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">📅</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;">${appt.doctor?.name||'Doctor'}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${appt.doctor?.specialty||'Specialist'} · Video Call</div>
+          <div style="font-size:11px;color:var(--accent-indigo);margin-top:1px;">${appt.day} ${appt.time}</div>
+        </div>
+        <span class="badge badge-info" style="font-size:10px;flex-shrink:0;">Confirmed</span>
+      `;
+      list.prepend(item);
+    });
+  }
+});
+</script>
+</body>
+</html>
